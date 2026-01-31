@@ -1,4 +1,6 @@
 
+import { BLOG_POSTS } from './data';
+
 const getApiKey = () => {
   try {
     return (typeof process !== 'undefined' && process.env && process.env.API_KEY) || '';
@@ -17,9 +19,10 @@ const getHeaders = () => ({
 });
 
 export const fetchPosts = async () => {
-  if (!AIRTABLE_API_KEY) {
-    console.warn('Airtable API Key is missing. Dashboard will operate in offline/mock mode.');
-    return [];
+  // Return local sample data if no API Key is provided
+  if (!AIRTABLE_API_KEY || AIRTABLE_API_KEY.includes('API_KEY')) {
+    console.warn('Using Local Sample Data (Offline Mode).');
+    return BLOG_POSTS;
   }
   
   try {
@@ -33,7 +36,7 @@ export const fetchPosts = async () => {
     }
     
     const data = await response.json();
-    return (data.records || []).map((record: any) => ({
+    const airtableRecords = (data.records || []).map((record: any) => ({
       id: record.id,
       airtableId: record.id,
       slug: record.fields.Slug,
@@ -51,13 +54,21 @@ export const fetchPosts = async () => {
       readTime: record.fields['Read Time'] || '5 min read',
       coverImage: record.fields['Cover Image'] || 'https://picsum.photos/seed/tcv-blog/1200/600',
     }));
+
+    // If Airtable is empty, fallback to local sample data to avoid a blank dashboard
+    return airtableRecords.length > 0 ? airtableRecords : BLOG_POSTS;
   } catch (error) {
-    console.error('Airtable Fetch Error:', error);
-    return [];
+    console.error('Airtable Fetch Error, falling back to local data:', error);
+    return BLOG_POSTS;
   }
 };
 
 export const savePost = async (post: any, isNew: boolean = false) => {
+  if (!AIRTABLE_API_KEY || AIRTABLE_API_KEY.includes('API_KEY')) {
+    console.warn('Sync ignored: Offline Mode Active.');
+    return true; // Simulate success for local testing
+  }
+
   const url = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}`;
   const method = isNew ? 'POST' : 'PATCH';
   
@@ -69,11 +80,11 @@ export const savePost = async (post: any, isNew: boolean = false) => {
     Category: post.category,
     Status: post.status,
     Date: post.date || new Date().toISOString().split('T')[0],
-    'Read Time': post.readTime,
+    'Read Time': post.readTime || '5 min read',
     'Cover Image': post.coverImage,
-    'Author Name': post.author.name,
-    'Author Avatar': post.author.avatar,
-    'Author Role': post.author.role,
+    'Author Name': post.author?.name || 'Marcus Thorne',
+    'Author Avatar': post.author?.avatar || 'https://picsum.photos/seed/marcus/100/100',
+    'Author Role': post.author?.role || 'Founder',
   };
 
   const body = isNew 

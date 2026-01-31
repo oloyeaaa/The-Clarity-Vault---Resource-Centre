@@ -49,30 +49,6 @@ export const RESOURCES: Resource[] = [
     tags: ['CRM', 'Inbound', 'Lead Gen'],
     certified: true,
     url: 'https://hubspot.com'
-  },
-  {
-    id: 'res-5',
-    slug: 'tableau-bi',
-    name: 'Tableau',
-    description: 'Powerful business intelligence and data visualization.',
-    longDescription: 'Tableau is the worlds leading analytics platform, offering visual analytics with powerful AI, data management and collaboration.',
-    category: 'Growth Data',
-    icon: 'bar-chart',
-    tags: ['BI', 'Visualization', 'Big Data'],
-    certified: false,
-    url: 'https://tableau.com'
-  },
-  {
-    id: 'res-6',
-    slug: 'adclarity-intelligence',
-    name: 'AdClarity',
-    description: 'Uncover competitor ad strategies across all digital channels.',
-    longDescription: 'AdClarity provides transparency into the digital advertising world, allowing you to see where competitors are spending and what creatives are working.',
-    category: 'Intelligence',
-    icon: 'eye',
-    tags: ['Ads', 'Competitors', 'Display'],
-    certified: false,
-    url: 'https://adclarity.com'
   }
 ];
 
@@ -82,10 +58,9 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: 'mastering-automation-2024',
     title: 'The Clarity Vault: Mastering Marketing Automation for Experts',
     excerpt: 'In a world of noise, TCV brings the clarity required to automate growth without losing the human touch.',
-    content: 'Marketing automation is often misunderstood as a way to replace human interaction. At The Clarity Vault, we view it as the ultimate leverage for experts—allowing them to scale their unique insights while maintaining personal connections with their audience...',
-    date: 'Oct 24, 2024',
+    content: '## The Automation Paradox\n\nMarketing automation is often misunderstood as a way to replace human interaction. At The Clarity Vault, we view it as the ultimate leverage for experts—allowing them to scale their unique insights while maintaining personal connections with their audience...\n\n### The ROI of Precision\n\nPrecision isn\'t just about accuracy; it\'s about **impact**. When you automate a flawed process, you simply scale inefficiency. The TCV method starts with a deep audit of the "Why" before we touch the "How".',
+    date: '2024-10-24',
     category: 'Strategy',
-    // Added missing status property
     status: 'Published',
     author: {
       name: 'Marcus Thorne',
@@ -93,17 +68,16 @@ export const BLOG_POSTS: BlogPost[] = [
       role: 'Founder, TCV'
     },
     readTime: '12 min read',
-    coverImage: 'https://picsum.photos/seed/post1/1200/600'
+    coverImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200'
   },
   {
     id: 'post-2',
     slug: 'ai-integration-framework',
     title: 'The TCV AI Integration Framework: Beyond LLM Hype',
     excerpt: 'How to build an augmented intelligence system that prioritizes expert intuition over generative noise.',
-    content: 'AI should not replace the expert, it should empower them. Our framework focuses on data hygiene and specific prompt engineering that extracts value rather than just text...',
-    date: 'Nov 12, 2024',
+    content: '## Moving Beyond Chatbots\n\nAI should not replace the expert, it should empower them. Our framework focuses on data hygiene and specific prompt engineering that extracts value rather than just text...\n\n> "The value of AI is not in its ability to write, but in its ability to synthesize complex expert datasets into actionable strategies."',
+    date: '2024-11-12',
     category: 'AI Strategy',
-    // Added missing status property
     status: 'Published',
     author: {
       name: 'Elena Vance',
@@ -111,6 +85,40 @@ export const BLOG_POSTS: BlogPost[] = [
       role: 'Head of Research'
     },
     readTime: '8 min read',
-    coverImage: 'https://picsum.photos/seed/post2/1200/600'
+    coverImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=1200'
+  },
+  {
+    id: 'draft-1',
+    slug: 'automated-lead-nurture-blueprint',
+    title: '[DRAFT] Advanced Lead Nurture: The 12-Step Automation Logic',
+    excerpt: 'A technical teardown of the high-converting nurture sequence used by TCV partners.',
+    content: '## The Logic Flow\n\n1. Initial Trigger: Form Submission\n2. Filter: High Intent vs Low Intent\n3. Enrichment: Clearbit/Lusha API call\n\n**Note: This blueprint is currently in the drafting phase.**',
+    date: '2024-12-01',
+    category: 'Marketing Automation',
+    status: 'Draft',
+    author: {
+      name: 'Marcus Thorne',
+      avatar: 'https://picsum.photos/seed/marcus/100/100',
+      role: 'Founder, TCV'
+    },
+    readTime: '15 min read',
+    coverImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200'
+  },
+  {
+    id: 'draft-2',
+    slug: 'seo-content-audit-checklist',
+    title: '[DRAFT] The 2025 Semantic SEO Audit Checklist',
+    excerpt: 'Updating our internal audit processes for the era of Search Generative Experience.',
+    content: '### Semantic Depth Audit\n\nIn the era of SGE, keywords are secondary to **entities** and **intent clusters**. \n\n- [ ] Map primary entities\n- [ ] Check for E-E-A-T signals\n- [ ] Verify schema markup precision',
+    date: '2024-12-05',
+    category: 'SEO Performance',
+    status: 'Draft',
+    author: {
+      name: 'Elena Vance',
+      avatar: 'https://picsum.photos/seed/elena/100/100',
+      role: 'Head of Research'
+    },
+    readTime: '10 min read',
+    coverImage: 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?auto=format&fit=crop&q=80&w=1200'
   }
 ];

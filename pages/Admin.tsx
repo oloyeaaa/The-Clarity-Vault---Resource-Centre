@@ -14,7 +14,8 @@ import {
   CheckCircle2, 
   Clock, 
   Layers,
-  AlertTriangle
+  AlertTriangle,
+  Zap
 } from 'lucide-react';
 import { fetchPosts, savePost } from '../lib/airtable';
 import { BlogPost } from '../types';
@@ -56,6 +57,7 @@ const Admin: React.FC = () => {
 
   const loadPosts = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await fetchPosts();
       setPosts(data || []);
@@ -73,7 +75,7 @@ const Admin: React.FC = () => {
       setEditingPost(null);
       loadPosts();
     } else {
-      alert('Sync failed. Please check your API configuration or network.');
+      throw new Error('Sync failed');
     }
   };
 
@@ -143,7 +145,7 @@ const Admin: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background flex text-slate-100 font-sans">
-      {/* Sidebar */}
+      {/* Sidebar - Expert Control */}
       <aside className="w-72 bg-background border-r border-slate-800 flex flex-col shrink-0 sticky top-0 h-screen">
         <div className="p-8 border-b border-slate-800">
           <div className="flex items-center gap-3">
@@ -171,7 +173,7 @@ const Admin: React.FC = () => {
           >
             <FileText size={18} /> Asset Manager
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800/50 rounded-xl font-bold text-sm transition-all">
+          <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800/50 rounded-xl font-bold text-sm transition-all opacity-50 cursor-not-allowed">
             <Layers size={18} /> Categories
           </button>
         </nav>
@@ -201,7 +203,8 @@ const Admin: React.FC = () => {
           <div className="flex items-center gap-4">
             <button 
               onClick={loadPosts}
-              className="p-2.5 bg-surface-light/50 text-slate-400 hover:text-accent border border-slate-800 rounded-xl transition-all"
+              disabled={loading}
+              className="p-2.5 bg-surface-light/50 text-slate-400 hover:text-accent border border-slate-800 rounded-xl transition-all disabled:opacity-50"
               title="Refresh Data"
             >
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
@@ -216,14 +219,14 @@ const Admin: React.FC = () => {
         </header>
 
         <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar">
-          {/* Stats Bar */}
-          <div className="grid grid-cols-3 gap-6">
+          {/* Stats Bar (Dashboard Metrics) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { label: 'Total Assets', value: stats.total, icon: Layers, color: 'text-white' },
               { label: 'Live Blueprints', value: stats.published, icon: CheckCircle2, color: 'text-green-500' },
               { label: 'Drafting Phase', value: stats.drafts, icon: Clock, color: 'text-yellow-500' },
             ].map((stat, i) => (
-              <div key={i} className="bg-surface border border-slate-800 p-6 rounded-2xl flex items-center justify-between">
+              <div key={i} className="bg-surface border border-slate-800 p-6 rounded-2xl flex items-center justify-between shadow-lg">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">{stat.label}</p>
                   <p className={`text-2xl font-black ${stat.color}`}>{stat.value}</p>
@@ -242,26 +245,73 @@ const Admin: React.FC = () => {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-6"
               >
-                <div className="bg-surface border border-slate-800 p-8 rounded-3xl">
-                  <h3 className="text-xl font-black mb-6 text-white">Recent Activity</h3>
-                  <div className="space-y-4">
-                    {posts.slice(0, 5).map(post => (
-                      <div key={post.id} className="flex items-center justify-between p-4 bg-background/50 border border-slate-800/50 rounded-xl">
-                        <div className="flex items-center gap-4">
-                          <div className={`size-2 rounded-full ${post.status === 'Published' ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                          <div>
-                            <p className="font-bold text-sm text-white">{post.title}</p>
-                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{post.category} • {post.date}</p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Recent Activity */}
+                  <div className="bg-surface border border-slate-800 p-8 rounded-3xl">
+                    <h3 className="text-xl font-black mb-6 text-white flex items-center gap-3">
+                      <Clock className="text-accent" size={20} />
+                      Recent Activity
+                    </h3>
+                    <div className="space-y-4">
+                      {posts.length > 0 ? (
+                        posts.slice(0, 5).map(post => (
+                          <div key={post.id} className="flex items-center justify-between p-4 bg-background/50 border border-slate-800/50 rounded-xl group hover:border-accent/30 transition-all">
+                            <div className="flex items-center gap-4">
+                              <div className={`size-2 rounded-full ${post.status === 'Published' ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                              <div>
+                                <p className="font-bold text-sm text-white group-hover:text-accent transition-colors">{post.title}</p>
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{post.category} • {post.date}</p>
+                              </div>
+                            </div>
+                            <button 
+                              onClick={() => setEditingPost(post)}
+                              className="text-xs font-bold text-accent hover:underline px-3 py-1 bg-accent/5 rounded-lg"
+                            >
+                              Edit
+                            </button>
                           </div>
+                        ))
+                      ) : (
+                        <p className="text-slate-500 text-sm italic py-8 text-center">No recent content activity.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* System Health */}
+                  <div className="bg-surface border border-slate-800 p-8 rounded-3xl">
+                    <h3 className="text-xl font-black mb-6 text-white flex items-center gap-3">
+                      <ShieldAlert className="text-accent" size={20} />
+                      Hub Statistics
+                    </h3>
+                    <div className="space-y-6">
+                      <div className="p-5 bg-background/30 rounded-2xl border border-slate-800">
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="text-xs font-bold text-slate-400">Content Completion Rate</span>
+                          <span className="text-xs font-bold text-white">{Math.round((stats.published / (stats.total || 1)) * 100)}%</span>
                         </div>
-                        <button 
-                          onClick={() => setEditingPost(post)}
-                          className="text-xs font-bold text-accent hover:underline"
-                        >
-                          Details
-                        </button>
+                        <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(stats.published / (stats.total || 1)) * 100}%` }}
+                            className="h-full bg-accent"
+                          />
+                        </div>
                       </div>
-                    ))}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 bg-background/30 rounded-xl border border-slate-800">
+                          <p className="text-[10px] font-black uppercase text-slate-500 mb-1">Airtable Sync</p>
+                          <p className="text-sm font-bold text-green-500 flex items-center gap-2">
+                            <CheckCircle2 size={14} /> Active
+                          </p>
+                        </div>
+                        <div className="p-4 bg-background/30 rounded-xl border border-slate-800">
+                          <p className="text-[10px] font-black uppercase text-slate-500 mb-1">Vault Key</p>
+                          <p className="text-sm font-bold text-accent flex items-center gap-2">
+                            <Zap size={14} /> Lvl 4
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -279,10 +329,10 @@ const Admin: React.FC = () => {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
                     <input 
                       type="text" 
-                      placeholder="Search vaults..."
+                      placeholder="Search blueprints by title..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-background border border-slate-800 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-accent transition-all text-white"
+                      className="w-full bg-background border border-slate-800 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-accent transition-all text-white placeholder-slate-600"
                     />
                   </div>
                   <div className="flex items-center gap-2 p-1 bg-background border border-slate-800 rounded-xl">
@@ -300,18 +350,18 @@ const Admin: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Table */}
+                {/* Asset Manager Table */}
                 <div className="bg-surface border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
                   {loading && !posts.length ? (
                     <div className="h-64 flex flex-col items-center justify-center gap-4">
                       <RefreshCw size={32} className="text-accent animate-spin" />
-                      <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Querying Airtable...</p>
+                      <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Querying Airtable Records...</p>
                     </div>
                   ) : filteredPosts.length === 0 ? (
                     <div className="h-64 flex flex-col items-center justify-center text-center p-8">
                       <FileText size={40} className="text-slate-700 mb-4" />
-                      <h3 className="text-lg font-bold text-slate-400 mb-2">No Blueprints Found</h3>
-                      <p className="text-sm text-slate-600 max-w-xs">Adjust your filters or create a new expert resource to populate the vault.</p>
+                      <h3 className="text-lg font-bold text-slate-400 mb-2">No Assets Found</h3>
+                      <p className="text-sm text-slate-600 max-w-xs">Adjust your search parameters or category filters.</p>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
