@@ -16,7 +16,8 @@ import {
   Quote,
   RefreshCw,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Lock
 } from 'lucide-react';
 import { BlogPost } from '../types';
 
@@ -34,6 +35,10 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
   const [isDirty, setIsDirty] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Check for Airtable system configuration
+  // Fixed: Using process.env instead of import.meta.env for platform environment access
+  const isConfigMissing = !process.env.VITE_AIRTABLE_TOKEN || !process.env.VITE_AIRTABLE_BASE_ID;
+
   // Auto-generate slug from title
   useEffect(() => {
     if (!initialPost.airtableId && formData.title && !formData.slug) {
@@ -46,7 +51,7 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
     setIsDirty(JSON.stringify(formData) !== JSON.stringify(initialPost));
   }, [formData.title, formData]);
 
-  // Draft Protection: Browser-level
+  // Draft Protection
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty && syncStatus !== 'success') {
@@ -82,7 +87,6 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
     const newContent = beforeSelection + before + selected + after + afterSelection;
     setFormData({ ...formData, content: newContent });
     
-    // Focus back and set selection
     setTimeout(() => {
       textarea.focus();
       textarea.setSelectionRange(
@@ -93,6 +97,8 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
   };
 
   const handleSync = async () => {
+    if (isConfigMissing) return;
+    
     if (!formData.title || !formData.slug) {
       alert('Asset Title and Slug are mandatory for sync.');
       return;
@@ -115,8 +121,6 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
 
   const renderPreviewContent = (content: string = '') => {
     if (!content) return '<p class="text-slate-600 italic">Content blueprint will manifest here...</p>';
-    
-    // Improved Markdown Renderer
     return content
       .split('\n')
       .map(line => {
@@ -129,7 +133,6 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
         if (trimmed.startsWith('```')) return `<pre class="bg-slate-900 border border-slate-800 p-4 rounded-xl font-mono text-sm my-6 text-accent overflow-x-auto">${trimmed.replace(/```/g, '')}</pre>`;
         if (trimmed === '') return '<div class="h-4"></div>';
         
-        // Inline parsing
         let parsed = trimmed
           .replace(/\*\*(.*?)\*\*/g, '<strong class="text-accent font-bold">$1</strong>')
           .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-accent underline hover:text-white transition-colors">$1</a>')
@@ -146,7 +149,6 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
       exit={{ opacity: 0, y: 20 }}
       className="fixed inset-0 z-[100] bg-background flex flex-col font-sans"
     >
-      {/* Precision Automation Hub Header */}
       <header className="h-16 border-b border-slate-800 px-6 flex items-center justify-between bg-surface/80 backdrop-blur-md">
         <div className="flex items-center gap-4">
           <button onClick={handleClose} className="p-2.5 hover:bg-slate-800 rounded-xl text-slate-400 transition-all active:scale-90">
@@ -171,29 +173,35 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
             {preview ? <FileText size={16} /> : <Eye size={16} />}
             {preview ? 'Edit' : 'Preview'}
           </button>
-          <button 
-            onClick={handleSync}
-            disabled={isSaving}
-            className={`flex items-center gap-2 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-50 ${
-              syncStatus === 'success' ? 'bg-green-600 text-white' : 
-              syncStatus === 'error' ? 'bg-red-600 text-white' : 
-              'bg-accent text-white hover:bg-accent/90 shadow-accent/20'
-            }`}
-          >
-            {isSaving ? <RefreshCw size={16} className="animate-spin" /> : 
-             syncStatus === 'success' ? <CheckCircle size={16} /> :
-             syncStatus === 'error' ? <AlertCircle size={16} /> :
-             <Send size={16} />}
-            {isSaving ? 'Syncing...' : 
-             syncStatus === 'success' ? 'Synced!' :
-             syncStatus === 'error' ? 'Failed' :
-             'Sync to Vault'}
-          </button>
+          <div className="relative group">
+            <button 
+              onClick={handleSync}
+              disabled={isSaving || isConfigMissing}
+              className={`flex items-center gap-2 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                syncStatus === 'success' ? 'bg-green-600 text-white' : 
+                syncStatus === 'error' ? 'bg-red-600 text-white' : 
+                'bg-accent text-white hover:bg-accent/90 shadow-accent/20'
+              }`}
+            >
+              {isConfigMissing ? <Lock size={16} /> : isSaving ? <RefreshCw size={16} className="animate-spin" /> : 
+               syncStatus === 'success' ? <CheckCircle size={16} /> :
+               syncStatus === 'error' ? <AlertCircle size={16} /> :
+               <Send size={16} />}
+              {isConfigMissing ? 'Config Missing' : isSaving ? 'Syncing...' : 
+               syncStatus === 'success' ? 'Synced!' :
+               syncStatus === 'error' ? 'Failed' :
+               'Sync to Vault'}
+            </button>
+            {isConfigMissing && (
+              <div className="absolute top-full mt-2 right-0 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                System Configuration Missing
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       <div className="flex-grow flex overflow-hidden">
-        {/* Editor Area (Markdown Input) */}
         <div className={`flex-grow flex flex-col ${preview ? 'hidden md:flex' : 'flex'}`}>
           <div className="h-12 border-b border-slate-800 px-4 flex items-center gap-1 bg-surface-light/20">
             {[
@@ -216,7 +224,6 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
               </button>
             ))}
           </div>
-          
           <textarea
             ref={textareaRef}
             id="content-area"
@@ -227,35 +234,19 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
           />
         </div>
 
-        {/* Vault Blueprint Preview */}
         <div className={`w-full md:w-1/2 border-l border-slate-800 overflow-y-auto bg-background p-8 md:p-16 custom-scrollbar ${!preview && 'hidden md:block'}`}>
           <div className="max-w-prose mx-auto">
             <span className="text-accent text-[10px] font-black uppercase tracking-[0.3em] mb-6 block border-b border-accent/20 pb-2">Vault Blueprint Preview</span>
             <h1 className="text-4xl md:text-5xl font-black mb-8 text-white leading-tight">{formData.title || 'Insight Title'}</h1>
-            
-            <AnimatePresence>
-              {formData.coverImage && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="rounded-2xl overflow-hidden mb-10 border border-slate-800 aspect-video shadow-2xl bg-surface"
-                >
-                  <img src={formData.coverImage} className="w-full h-full object-cover" alt="Cover" onError={(e) => e.currentTarget.style.display='none'} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <div className="prose prose-invert prose-lg max-w-none">
               <div dangerouslySetInnerHTML={{ __html: renderPreviewContent(formData.content) }} />
             </div>
           </div>
         </div>
 
-        {/* Configuration Panel */}
         <aside className="w-80 border-l border-slate-800 bg-surface flex flex-col overflow-y-auto hidden lg:flex">
           <div className="p-8 space-y-8">
             <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] border-b border-slate-800 pb-4">Configuration</h4>
-            
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="block text-[9px] font-black text-accent uppercase tracking-widest">Asset Title</label>
@@ -267,7 +258,6 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
                   placeholder="The Future of SEO..."
                 />
               </div>
-
               <div className="space-y-2">
                 <label className="block text-[9px] font-black text-accent uppercase tracking-widest">URL Path (Slug)</label>
                 <input 
@@ -278,18 +268,6 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
                   placeholder="seo-future-2024"
                 />
               </div>
-
-              <div className="space-y-2">
-                <label className="block text-[9px] font-black text-accent uppercase tracking-widest">Blueprint Excerpt</label>
-                <textarea 
-                  value={formData.excerpt || ''}
-                  onChange={(e) => setFormData({...formData, excerpt: e.target.value})}
-                  rows={3}
-                  className="w-full bg-background border border-slate-800 rounded-xl p-3 text-xs focus:border-accent outline-none text-white resize-none transition-all"
-                  placeholder="Summary for the blog list..."
-                />
-              </div>
-
               <div className="space-y-2">
                 <label className="block text-[9px] font-black text-accent uppercase tracking-widest">Visibility Status</label>
                 <select 
@@ -301,7 +279,6 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
                   <option value="Published">Live Blueprint</option>
                 </select>
               </div>
-
               <div className="space-y-2">
                 <label className="block text-[9px] font-black text-accent uppercase tracking-widest">Category</label>
                 <select 
@@ -314,22 +291,6 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
                   <option value="SEO Performance">SEO Performance</option>
                   <option value="Marketing Automation">Marketing Automation</option>
                 </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-[9px] font-black text-accent uppercase tracking-widest">Feature Image URL</label>
-                <input 
-                  type="text" 
-                  value={formData.coverImage || ''}
-                  onChange={(e) => setFormData({...formData, coverImage: e.target.value})}
-                  className="w-full bg-background border border-slate-800 rounded-xl p-3 text-xs focus:border-accent outline-none text-white mb-2 transition-all"
-                  placeholder="https://images.unsplash.com/..."
-                />
-                {formData.coverImage && (
-                  <div className="aspect-[16/9] rounded-lg overflow-hidden border border-slate-800 bg-background flex items-center justify-center">
-                    <img src={formData.coverImage} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" onError={(e) => e.currentTarget.style.opacity='0'} />
-                  </div>
-                )}
               </div>
             </div>
           </div>

@@ -1,33 +1,30 @@
 
 import { BLOG_POSTS } from './data';
 
-const getApiKey = () => {
-  try {
-    return (typeof process !== 'undefined' && process.env && process.env.API_KEY) || '';
-  } catch (e) {
-    return '';
-  }
-};
-
-const AIRTABLE_API_KEY = getApiKey();
-const BASE_ID = (typeof process !== 'undefined' && process.env && process.env.AIRTABLE_BASE_ID) || 'appXXXXXXXXXXXX';
-const TABLE_NAME = 'Blog System';
+// Airtable Configuration using Environment Variables
+// Fixed: Using process.env instead of import.meta.env to access environment variables
+const AIRTABLE_API_KEY = process.env.VITE_AIRTABLE_TOKEN;
+const BASE_ID = process.env.VITE_AIRTABLE_BASE_ID;
+const TABLE_ID = 'tblfptsecFwUXsxUy';
 
 const getHeaders = () => ({
   'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
   'Content-Type': 'application/json',
 });
 
+const isConfigValid = () => {
+  return !!(AIRTABLE_API_KEY && BASE_ID && !AIRTABLE_API_KEY.startsWith('pat...'));
+};
+
 export const fetchPosts = async () => {
-  // Return local sample data if no API Key is provided
-  if (!AIRTABLE_API_KEY || AIRTABLE_API_KEY.includes('API_KEY')) {
-    console.warn('Using Local Sample Data (Offline Mode).');
+  if (!isConfigValid()) {
+    console.warn('Airtable configuration missing. Using local samples.');
     return BLOG_POSTS;
   }
   
   try {
     const response = await fetch(
-      `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}?sort%5B0%5D%5Bfield%5D=Date&sort%5B0%5D%5Bdirection%5D=desc`,
+      `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?sort%5B0%5D%5Bfield%5D=Date&sort%5B0%5D%5Bdirection%5D=desc`,
       { headers: getHeaders() }
     );
     
@@ -55,21 +52,23 @@ export const fetchPosts = async () => {
       coverImage: record.fields['Cover Image'] || 'https://picsum.photos/seed/tcv-blog/1200/600',
     }));
 
-    // If Airtable is empty, fallback to local sample data to avoid a blank dashboard
     return airtableRecords.length > 0 ? airtableRecords : BLOG_POSTS;
   } catch (error) {
-    console.error('Airtable Fetch Error, falling back to local data:', error);
+    console.error('Airtable Fetch Error:', error);
     return BLOG_POSTS;
   }
 };
 
 export const savePost = async (post: any, isNew: boolean = false) => {
-  if (!AIRTABLE_API_KEY || AIRTABLE_API_KEY.includes('API_KEY')) {
-    console.warn('Sync ignored: Offline Mode Active.');
-    return true; // Simulate success for local testing
+  if (!isConfigValid()) {
+    console.error('Cannot save: Airtable configuration is missing.');
+    return false;
   }
 
-  const url = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}`;
+  const url = isNew 
+    ? `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`
+    : `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${post.airtableId || post.id}`;
+  
   const method = isNew ? 'POST' : 'PATCH';
   
   const fields = {
@@ -89,7 +88,7 @@ export const savePost = async (post: any, isNew: boolean = false) => {
 
   const body = isNew 
     ? { records: [{ fields }] } 
-    : { records: [{ id: post.airtableId, fields }] };
+    : { fields };
 
   try {
     const response = await fetch(url, {

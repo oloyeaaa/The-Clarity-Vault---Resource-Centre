@@ -120,5 +120,22 @@ export const BLOG_POSTS: BlogPost[] = [
     },
     readTime: '10 min read',
     coverImage: 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?auto=format&fit=crop&q=80&w=1200'
+  },
+  {
+    id: 'draft-3',
+    slug: 'content-velocity-blueprint-2025',
+    title: '[DRAFT] Content Velocity: Scaling Expert Output with AI',
+    excerpt: 'How to use content atomization to turn one podcast into 50+ expert assets.',
+    content: '## The Atomization Process\n\nScale is nothing without quality. We utilize a "Human-in-the-loop" system to ensure expert nuance survives the automation process.\n\n### Required Tools\n- Descript\n- Make.com\n- Anthropic Claude 3.5 Sonnet',
+    date: '2024-12-10',
+    category: 'Content Systems',
+    status: 'Draft',
+    author: {
+      name: 'Marcus Thorne',
+      avatar: 'https://picsum.photos/seed/marcus/100/100',
+      role: 'Founder, TCV'
+    },
+    readTime: '20 min read',
+    coverImage: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=1200'
   }
 ];
