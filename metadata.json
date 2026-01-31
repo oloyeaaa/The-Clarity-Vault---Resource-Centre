@@ -1,8 +1,5 @@
 {
   "name": "The Clarity Vault - Resource Centre",
   "description": "A premium directory and resource hub for marketing automation, AI tools, and growth performance curated for high-level strategists.",
-  "requestFramePermissions": [
-    "camera",
-    "microphone"
-  ]
+  "requestFramePermissions": []
 }
