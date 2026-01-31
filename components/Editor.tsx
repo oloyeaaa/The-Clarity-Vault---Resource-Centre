@@ -35,9 +35,10 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
   const [isDirty, setIsDirty] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Check for Airtable system configuration
-  // Fixed: Using process.env instead of import.meta.env for platform environment access
-  const isConfigMissing = !process.env.VITE_AIRTABLE_TOKEN || !process.env.VITE_AIRTABLE_BASE_ID;
+  // Check for Airtable system configuration using process.env
+  const isConfigMissing = !process.env.VITE_AIRTABLE_TOKEN || 
+                          !process.env.VITE_AIRTABLE_BASE_ID || 
+                          (process.env.VITE_AIRTABLE_TOKEN && process.env.VITE_AIRTABLE_TOKEN.startsWith('pat...'));
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -180,6 +181,7 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
               className={`flex items-center gap-2 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                 syncStatus === 'success' ? 'bg-green-600 text-white' : 
                 syncStatus === 'error' ? 'bg-red-600 text-white' : 
+                isConfigMissing ? 'bg-slate-700/50 text-slate-400 border border-slate-600' :
                 'bg-accent text-white hover:bg-accent/90 shadow-accent/20'
               }`}
             >

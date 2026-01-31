@@ -1,8 +1,7 @@
 
 import { BLOG_POSTS } from './data';
 
-// Airtable Configuration using Environment Variables
-// Fixed: Using process.env instead of import.meta.env to access environment variables
+// Airtable Configuration using process.env
 const AIRTABLE_API_KEY = process.env.VITE_AIRTABLE_TOKEN;
 const BASE_ID = process.env.VITE_AIRTABLE_BASE_ID;
 const TABLE_ID = 'tblfptsecFwUXsxUy';
@@ -13,12 +12,13 @@ const getHeaders = () => ({
 });
 
 const isConfigValid = () => {
+  // Checks if the key exists and isn't just the default placeholder 'pat...'
   return !!(AIRTABLE_API_KEY && BASE_ID && !AIRTABLE_API_KEY.startsWith('pat...'));
 };
 
 export const fetchPosts = async () => {
   if (!isConfigValid()) {
-    console.warn('Airtable configuration missing. Using local samples.');
+    console.warn('Airtable configuration missing in environment. Using local samples.');
     return BLOG_POSTS;
   }
   
@@ -61,7 +61,7 @@ export const fetchPosts = async () => {
 
 export const savePost = async (post: any, isNew: boolean = false) => {
   if (!isConfigValid()) {
-    console.error('Cannot save: Airtable configuration is missing.');
+    console.error('Cannot save: Airtable configuration is missing from environment.');
     return false;
   }
 
