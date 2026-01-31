@@ -1,23 +1,21 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-// Fixed missing imports for Users and Eye
-import { ShieldCheck, ArrowRight, Zap, Brain, BarChart3, Mail, Users, Eye } from 'lucide-react';
+import { ShieldCheck, ArrowRight, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { RESOURCES } from '../lib/data';
+import { ToolCard } from '../components/ToolCard';
+import { useSEO } from '../lib/seo';
 
 const Home: React.FC = () => {
+  useSEO({ 
+    title: 'Precision Automation Hub', 
+    description: 'Vetted resources for marketing automation and AI strategy.' 
+  });
+
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
   };
 
   return (
@@ -92,37 +90,7 @@ const Home: React.FC = () => {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {RESOURCES.slice(0, 6).map((res) => (
-            <motion.div 
-              key={res.id}
-              variants={itemVariants}
-              className="group bg-surface border border-accent/5 p-8 rounded-2xl hover:border-accent/40 transition-all cursor-pointer relative flex flex-col h-full"
-            >
-              <div className="flex justify-between items-start mb-8">
-                <div className="size-14 bg-background border border-slate-800 rounded-xl flex items-center justify-center p-3">
-                  {res.icon === 'search' && <ShieldCheck className="text-accent" />}
-                  {res.icon === 'zap' && <Zap className="text-accent" />}
-                  {res.icon === 'brain' && <Brain className="text-accent" />}
-                  {res.icon === 'users' && <Users className="text-accent" />}
-                  {res.icon === 'bar-chart' && <BarChart3 className="text-accent" />}
-                  {res.icon === 'eye' && <Eye className="text-accent" />}
-                </div>
-                {res.certified && (
-                  <span className="bg-accent/10 text-accent text-[9px] font-black px-2 py-1 rounded uppercase tracking-wider border border-accent/20">
-                    TCV Certified
-                  </span>
-                )}
-              </div>
-              <h3 className="text-xl font-extrabold mb-3 group-hover:text-accent transition-colors">{res.name}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed mb-8 flex-grow">
-                {res.description}
-              </p>
-              <div className="flex items-center justify-between pt-6 border-t border-slate-800">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{res.category}</span>
-                <Link to={`/resources/${res.slug}`} className="text-slate-600 group-hover:text-accent transition-all group-hover:translate-x-1">
-                  <ArrowRight size={20} />
-                </Link>
-              </div>
-            </motion.div>
+            <ToolCard key={res.id} resource={res} />
           ))}
         </motion.div>
       </section>
