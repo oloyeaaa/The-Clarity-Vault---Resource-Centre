@@ -13,7 +13,8 @@ import {
   ShieldAlert, 
   CheckCircle2, 
   Clock, 
-  Layers
+  Layers,
+  AlertTriangle
 } from 'lucide-react';
 import { fetchPosts, savePost } from '../lib/airtable';
 import { BlogPost } from '../types';
@@ -27,33 +28,43 @@ const Admin: React.FC = () => {
   const [editingPost, setEditingPost] = useState<Partial<BlogPost> | null>(null);
   const [filter, setFilter] = useState<'All' | 'Published' | 'Draft'>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('Admin Dashboard Initialized');
     const saved = localStorage.getItem('tcv_admin_session');
     if (saved === 'true') setIsAuthenticated(true);
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) loadPosts();
+    if (isAuthenticated) {
+      loadPosts();
+    }
   }, [isAuthenticated]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Default fallback password if env is not set
     const accessKey = 'clarity2024';
     if (password === accessKey) {
       setIsAuthenticated(true);
       localStorage.setItem('tcv_admin_session', 'true');
+      setError(null);
     } else {
-      alert('Invalid Access Key');
+      setError('Invalid Vault Access Key');
     }
   };
 
   const loadPosts = async () => {
     setLoading(true);
-    const data = await fetchPosts();
-    setPosts(data);
-    setLoading(false);
+    try {
+      const data = await fetchPosts();
+      setPosts(data || []);
+    } catch (err) {
+      setError('Failed to connect to Airtable. Using local data.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSave = async (updatedPost: Partial<BlogPost>) => {
@@ -62,13 +73,13 @@ const Admin: React.FC = () => {
       setEditingPost(null);
       loadPosts();
     } else {
-      alert('Sync failed. Please check your API configuration.');
+      alert('Sync failed. Please check your API configuration or network.');
     }
   };
 
   const filteredPosts = posts.filter(post => {
     const matchesFilter = filter === 'All' || post.status === filter;
-    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = post.title?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -91,6 +102,7 @@ const Admin: React.FC = () => {
           </div>
           <h1 className="text-2xl font-extrabold mb-2 uppercase tracking-tight text-white">The Clarity Vault</h1>
           <p className="text-slate-500 text-sm mb-8 font-medium">Restricted Expert CMS Access</p>
+          
           <form onSubmit={handleLogin} className="space-y-4">
             <input 
               type="password" 
@@ -100,7 +112,12 @@ const Admin: React.FC = () => {
               autoFocus
               className="w-full bg-background border border-slate-800 rounded-xl px-6 py-4 outline-none focus:border-accent transition-all text-center tracking-widest font-black text-white"
             />
-            <button className="w-full bg-accent text-white py-4 rounded-xl font-extrabold hover:bg-accent/90 transition-all shadow-xl shadow-accent/20">
+            {error && (
+              <div className="flex items-center justify-center gap-2 text-red-500 text-[10px] font-bold uppercase tracking-widest">
+                <AlertTriangle size={12} /> {error}
+              </div>
+            )}
+            <button className="w-full bg-accent text-white py-4 rounded-xl font-extrabold hover:bg-accent/90 transition-all shadow-xl shadow-accent/20 active:scale-95">
               Unlock Dashboard
             </button>
           </form>
