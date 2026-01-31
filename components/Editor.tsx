@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Eye, 
   FileText, 
@@ -14,8 +14,9 @@ import {
   Send,
   Code,
   Quote,
-  // Added RefreshCw to imports to fix error on line 100
-  RefreshCw
+  RefreshCw,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 import { BlogPost } from '../types';
 
@@ -29,6 +30,7 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
   const [post, setPost] = useState<Partial<BlogPost>>(initialPost);
   const [preview, setPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   // Auto-generate slug from title if it's a new post and slug is empty
   useEffect(() => {
@@ -39,7 +41,7 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
         .replace(/(^-|-$)/g, '');
       setPost(prev => ({ ...prev, slug: generated }));
     }
-  }, [post.title]);
+  }, [post.title, initialPost.airtableId]);
 
   const insertText = (before: string, after: string = '') => {
     const textarea = document.getElementById('content-area') as HTMLTextAreaElement;
@@ -53,16 +55,57 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
     const newContent = beforeSelection + before + selected + after + afterSelection;
     setPost({ ...post, content: newContent });
     
+    // Maintain focus and set selection
     setTimeout(() => {
       textarea.focus();
-      textarea.setSelectionRange(start + before.length, end + before.length);
+      textarea.setSelectionRange(
+        start + before.length, 
+        end + before.length
+      );
     }, 0);
   };
 
   const handleSaveInternal = async () => {
+    if (!post.title || !post.slug) {
+      alert('Asset Title and Slug are mandatory.');
+      return;
+    }
+    
     setIsSaving(true);
-    await onSave(post);
-    setIsSaving(false);
+    setSyncStatus('idle');
+    try {
+      await onSave(post);
+      setSyncStatus('success');
+      setTimeout(() => setSyncStatus('idle'), 3000);
+    } catch (e) {
+      setSyncStatus('error');
+      setTimeout(() => setSyncStatus('idle'), 3000);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const renderMarkdown = (content: string = '') => {
+    if (!content) return '<p class="text-slate-600 italic">Content blueprint will manifest here...</p>';
+    
+    // Basic markdown conversion logic
+    return content
+      .split('\n')
+      .map(line => {
+        if (line.startsWith('###')) return `<h3 class="text-xl font-black mt-8 mb-4 text-white">${line.replace('###', '')}</h3>`;
+        if (line.startsWith('##')) return `<h2 class="text-2xl font-black mt-10 mb-6 text-white border-b border-slate-800 pb-2">${line.replace('##', '')}</h2>`;
+        if (line.startsWith('#')) return `<h1 class="text-3xl font-black mt-12 mb-8 text-white">${line.replace('#', '')}</h1>`;
+        if (line.startsWith('>')) return `<blockquote class="border-l-4 border-accent pl-6 italic text-slate-300 my-8 bg-accent/5 py-4 rounded-r-xl">${line.replace('>', '')}</blockquote>`;
+        if (line.startsWith('- ')) return `<li class="ml-6 list-disc mb-2 text-slate-400">${line.replace('- ', '')}</li>`;
+        if (line.startsWith('```')) return `<pre class="bg-slate-900 border border-slate-800 p-4 rounded-xl font-mono text-sm my-6 text-accent overflow-x-auto">${line.replace(/```/g, '')}</pre>`;
+        if (line.trim() === '') return '<div class="h-4"></div>';
+        
+        return `<p class="mb-4 text-slate-400 leading-relaxed">${line
+          .replace(/\*\*(.*?)\*\*/g, '<strong class="text-accent">$1</strong>')
+          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-accent underline hover:text-white transition-colors">$1</a>')
+          .replace(/`(.*?)`/g, '<code class="bg-slate-800 px-1.5 py-0.5 rounded text-accent font-mono text-xs">$1</code>')
+        }</p>`;
+      }).join('');
   };
 
   return (
@@ -97,10 +140,20 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
           <button 
             onClick={handleSaveInternal}
             disabled={isSaving}
-            className="flex items-center gap-2 px-6 py-2 bg-accent text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-accent/90 shadow-lg shadow-accent/20 active:scale-95 transition-all disabled:opacity-50"
+            className={`flex items-center gap-2 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-50 ${
+              syncStatus === 'success' ? 'bg-green-600 text-white' : 
+              syncStatus === 'error' ? 'bg-red-600 text-white' : 
+              'bg-accent text-white hover:bg-accent/90 shadow-accent/20'
+            }`}
           >
-            {isSaving ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
-            {isSaving ? 'Syncing...' : 'Sync to Vault'}
+            {isSaving ? <RefreshCw size={16} className="animate-spin" /> : 
+             syncStatus === 'success' ? <CheckCircle size={16} /> :
+             syncStatus === 'error' ? <AlertCircle size={16} /> :
+             <Send size={16} />}
+            {isSaving ? 'Syncing...' : 
+             syncStatus === 'success' ? 'Synced!' :
+             syncStatus === 'error' ? 'Failed' :
+             'Sync to Vault'}
           </button>
         </div>
       </header>
@@ -135,7 +188,7 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
             value={post.content || ''}
             onChange={(e) => setPost({ ...post, content: e.target.value })}
             placeholder="Document the expert strategy..."
-            className="flex-grow bg-background text-slate-300 p-8 md:p-12 outline-none resize-none font-mono text-base leading-relaxed custom-scrollbar"
+            className="flex-grow bg-background text-slate-300 p-8 md:p-12 outline-none resize-none font-mono text-base leading-relaxed custom-scrollbar selection:bg-accent/20"
           />
         </div>
 
@@ -146,62 +199,63 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
               <span className="text-accent text-[10px] font-black uppercase tracking-[0.3em] mb-6 block border-b border-accent/20 pb-2">Vault Blueprint Preview</span>
               <h1 className="text-4xl md:text-5xl font-black mb-8 text-white leading-tight">{post.title || 'Insight Title'}</h1>
               
-              {post.coverImage && (
-                <div className="rounded-2xl overflow-hidden mb-10 border border-slate-800 aspect-video shadow-2xl">
-                  <img src={post.coverImage} className="w-full h-full object-cover" alt="Cover" />
-                </div>
-              )}
-
-              <div className="prose prose-invert prose-lg max-w-none prose-p:text-slate-400 prose-p:leading-relaxed prose-headings:text-white prose-headings:font-black prose-strong:text-accent">
-                {post.content ? (
-                  <div dangerouslySetInnerHTML={{ __html: post.content
-                    .split('\n')
-                    .map(line => {
-                      if (line.startsWith('###')) return `<h3 class="text-xl font-black mt-8 mb-4 text-white">${line.replace('###', '')}</h3>`;
-                      if (line.startsWith('##')) return `<h2 class="text-2xl font-black mt-10 mb-6 text-white border-b border-slate-800 pb-2">${line.replace('##', '')}</h2>`;
-                      if (line.startsWith('>')) return `<blockquote class="border-l-4 border-accent pl-6 italic text-slate-300 my-8">${line.replace('>', '')}</blockquote>`;
-                      if (line.trim() === '') return '<br/>';
-                      return `<p class="mb-4 text-slate-400">${line.replace(/\*\*(.*?)\*\*/g, '<strong class="text-accent">$1</strong>')}</p>`;
-                    }).join('') }} 
-                  />
-                ) : (
-                  <p className="text-slate-600 italic font-light">Content blueprint will manifest here...</p>
+              <AnimatePresence>
+                {post.coverImage && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="rounded-2xl overflow-hidden mb-10 border border-slate-800 aspect-video shadow-2xl"
+                  >
+                    <img src={post.coverImage} className="w-full h-full object-cover" alt="Cover" />
+                  </motion.div>
                 )}
+              </AnimatePresence>
+
+              <div className="prose prose-invert prose-lg max-w-none">
+                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }} />
               </div>
             </div>
           </div>
         )}
 
-        {/* Metadata Sidebar */}
+        {/* Metadata Sidebar (Configuration Panel) */}
         <aside className="w-80 border-l border-slate-800 bg-surface flex flex-col overflow-y-auto hidden xl:flex">
           <div className="p-8 space-y-8">
             <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] border-b border-slate-800 pb-4">Configuration</h4>
             
             <div className="space-y-6">
-              {[
-                { label: 'Asset Title', key: 'title', type: 'text' },
-                { label: 'URL Path (Slug)', key: 'slug', type: 'text' },
-                { label: 'Blueprint Excerpt', key: 'excerpt', type: 'textarea' },
-              ].map((field) => (
-                <div key={field.key} className="space-y-2">
-                  <label className="block text-[9px] font-black text-accent uppercase tracking-widest">{field.label}</label>
-                  {field.type === 'textarea' ? (
-                    <textarea 
-                      value={(post as any)[field.key] || ''}
-                      onChange={(e) => setPost({...post, [field.key]: e.target.value})}
-                      rows={3}
-                      className="w-full bg-background border border-slate-800 rounded-xl p-3 text-xs focus:border-accent outline-none text-white resize-none"
-                    />
-                  ) : (
-                    <input 
-                      type="text" 
-                      value={(post as any)[field.key] || ''}
-                      onChange={(e) => setPost({...post, [field.key]: e.target.value})}
-                      className="w-full bg-background border border-slate-800 rounded-xl p-3 text-xs focus:border-accent outline-none text-white font-bold"
-                    />
-                  )}
-                </div>
-              ))}
+              <div className="space-y-2">
+                <label className="block text-[9px] font-black text-accent uppercase tracking-widest">Asset Title</label>
+                <input 
+                  type="text" 
+                  value={post.title || ''}
+                  onChange={(e) => setPost({...post, title: e.target.value})}
+                  className="w-full bg-background border border-slate-800 rounded-xl p-3 text-xs focus:border-accent outline-none text-white font-bold transition-all"
+                  placeholder="The Future of SEO..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-[9px] font-black text-accent uppercase tracking-widest">URL Path (Slug)</label>
+                <input 
+                  type="text" 
+                  value={post.slug || ''}
+                  onChange={(e) => setPost({...post, slug: e.target.value.toLowerCase().replace(/\s+/g, '-')})}
+                  className="w-full bg-background border border-slate-800 rounded-xl p-3 text-xs focus:border-accent outline-none text-white font-mono transition-all"
+                  placeholder="seo-future-2024"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-[9px] font-black text-accent uppercase tracking-widest">Blueprint Excerpt</label>
+                <textarea 
+                  value={post.excerpt || ''}
+                  onChange={(e) => setPost({...post, excerpt: e.target.value})}
+                  rows={3}
+                  className="w-full bg-background border border-slate-800 rounded-xl p-3 text-xs focus:border-accent outline-none text-white resize-none transition-all"
+                  placeholder="Summary of the blueprint..."
+                />
+              </div>
 
               <div className="space-y-2">
                 <label className="block text-[9px] font-black text-accent uppercase tracking-widest">Visibility Status</label>
@@ -216,16 +270,31 @@ export const Editor: React.FC<EditorProps> = ({ post: initialPost, onSave, onClo
               </div>
 
               <div className="space-y-2">
+                <label className="block text-[9px] font-black text-accent uppercase tracking-widest">Category</label>
+                <select 
+                  value={post.category || 'Strategy'}
+                  onChange={(e) => setPost({...post, category: e.target.value})}
+                  className="w-full bg-background border border-slate-800 rounded-xl p-3 text-xs focus:border-accent outline-none text-white font-bold appearance-none cursor-pointer"
+                >
+                  <option value="Strategy">Strategy</option>
+                  <option value="AI Strategy">AI Strategy</option>
+                  <option value="SEO Performance">SEO Performance</option>
+                  <option value="Marketing Automation">Marketing Automation</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
                 <label className="block text-[9px] font-black text-accent uppercase tracking-widest">Feature Image URL</label>
                 <input 
                   type="text" 
                   value={post.coverImage || ''}
                   onChange={(e) => setPost({...post, coverImage: e.target.value})}
-                  className="w-full bg-background border border-slate-800 rounded-xl p-3 text-xs focus:border-accent outline-none text-white mb-2"
+                  className="w-full bg-background border border-slate-800 rounded-xl p-3 text-xs focus:border-accent outline-none text-white mb-2 transition-all"
+                  placeholder="https://..."
                 />
                 {post.coverImage && (
-                  <div className="aspect-[4/3] rounded-lg overflow-hidden border border-slate-800">
-                    <img src={post.coverImage} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all" />
+                  <div className="aspect-[16/9] rounded-lg overflow-hidden border border-slate-800 bg-background flex items-center justify-center">
+                    <img src={post.coverImage} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
                   </div>
                 )}
               </div>
