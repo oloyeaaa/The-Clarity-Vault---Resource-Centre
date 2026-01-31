@@ -14,12 +14,14 @@ export interface Resource {
 
 export interface BlogPost {
   id: string;
+  airtableId?: string;
   slug: string;
   title: string;
   excerpt: string;
   content: string;
   date: string;
   category: string;
+  status: 'Published' | 'Draft';
   author: {
     name: string;
     avatar: string;

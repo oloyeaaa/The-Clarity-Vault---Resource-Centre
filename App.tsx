@@ -8,12 +8,8 @@ import ResourceList from './pages/ResourceList';
 import ResourceDetail from './pages/ResourceDetail';
 import BlogList from './pages/BlogList';
 import BlogPostDetail from './pages/BlogPostDetail';
+import Admin from './pages/Admin';
 
-/**
- * Environment detection to handle the AI Studio preview environment and localhost.
- * AI Studio and some preview containers require HashRouter to function correctly,
- * while production benefits from BrowserRouter for SEO-friendly URLs.
- */
 const isDevelopment = 
   window.location.hostname.includes('google.com') || 
   window.location.hostname === 'localhost' ||
@@ -25,17 +21,19 @@ const App: React.FC = () => {
   return (
     <HelmetProvider>
       <Router>
-        <MainLayout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/resources" element={<ResourceList />} />
-            <Route path="/resources/:slug" element={<ResourceDetail />} />
-            <Route path="/blog" element={<BlogList />} />
-            <Route path="/blog/:slug" element={<BlogPostDetail />} />
-            {/* Fallback for invalid routes */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </MainLayout>
+        <Routes>
+          {/* Admin area is handled separately to avoid MainLayout wrap if desired, 
+              or kept simple for consistent branding */}
+          <Route path="/admin" element={<Admin />} />
+          
+          <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+          <Route path="/resources" element={<MainLayout><ResourceList /></MainLayout>} />
+          <Route path="/resources/:slug" element={<MainLayout><ResourceDetail /></MainLayout>} />
+          <Route path="/blog" element={<MainLayout><BlogList /></MainLayout>} />
+          <Route path="/blog/:slug" element={<MainLayout><BlogPostDetail /></MainLayout>} />
+          
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </Router>
     </HelmetProvider>
   );

@@ -85,6 +85,8 @@ export const BLOG_POSTS: BlogPost[] = [
     content: 'Marketing automation is often misunderstood as a way to replace human interaction. At The Clarity Vault, we view it as the ultimate leverage for experts—allowing them to scale their unique insights while maintaining personal connections with their audience...',
     date: 'Oct 24, 2024',
     category: 'Strategy',
+    // Added missing status property
+    status: 'Published',
     author: {
       name: 'Marcus Thorne',
       avatar: 'https://picsum.photos/seed/marcus/100/100',
@@ -101,6 +103,8 @@ export const BLOG_POSTS: BlogPost[] = [
     content: 'AI should not replace the expert, it should empower them. Our framework focuses on data hygiene and specific prompt engineering that extracts value rather than just text...',
     date: 'Nov 12, 2024',
     category: 'AI Strategy',
+    // Added missing status property
+    status: 'Published',
     author: {
       name: 'Elena Vance',
       avatar: 'https://picsum.photos/seed/elena/100/100',
