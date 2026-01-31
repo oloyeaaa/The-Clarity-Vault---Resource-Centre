@@ -1,39 +1,39 @@
 
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { ChevronLeft, ExternalLink, ShieldCheck, Zap, Brain, Users, BarChart3, Eye, Check } from 'lucide-react';
 import { RESOURCES } from '../lib/data';
+import { useSEO } from '../lib/seo';
 
 const ResourceDetail: React.FC = () => {
   const { slug } = useParams();
   const resource = RESOURCES.find(r => r.slug === slug);
 
+  useSEO({ 
+    title: resource ? resource.name : 'Resource Not Found',
+    description: resource ? resource.description : undefined
+  });
+
   if (!resource) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-24 text-center">
         <h1 className="text-2xl font-bold mb-4">Resource not found</h1>
-        <Link to="/resources" className="text-accent">Back to Directory</Link>
+        <Link to="/resources" className="text-accent font-bold hover:underline">Back to Directory</Link>
       </div>
     );
   }
 
-  // Set document title for "SEO"
-  React.useEffect(() => {
-    document.title = `${resource.name} | The Clarity Vault`;
-  }, [resource]);
-
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
-      <Link to="/resources" className="inline-flex items-center gap-2 text-slate-500 hover:text-white transition-colors mb-12 font-bold text-sm">
-        <ChevronLeft size={16} />
+      <Link to="/resources" className="inline-flex items-center gap-2 text-slate-500 hover:text-white transition-colors mb-12 font-bold text-sm group">
+        <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
         Back to Directory
       </Link>
 
       <article className="grid grid-cols-1 lg:grid-cols-3 gap-16">
         <div className="lg:col-span-2">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-12">
-            <div className="size-24 bg-surface border border-slate-800 rounded-2xl flex items-center justify-center p-6">
+            <div className="size-24 bg-surface border border-slate-800 rounded-2xl flex items-center justify-center p-6 shrink-0 shadow-2xl">
                 {resource.icon === 'search' && <ShieldCheck className="text-accent" size={40} />}
                 {resource.icon === 'zap' && <Zap className="text-accent" size={40} />}
                 {resource.icon === 'brain' && <Brain className="text-accent" size={40} />}

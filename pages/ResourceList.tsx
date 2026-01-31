@@ -2,12 +2,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, Filter, ShieldCheck, Zap, Brain, Users, BarChart3, Eye, ArrowRight } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { RESOURCES } from '../lib/data';
+import { ToolCard } from '../components/ToolCard';
+import { useSEO } from '../lib/seo';
 
 const ResourceList: React.FC = () => {
   const [searchParams] = useSearchParams();
   const filter = searchParams.get('filter') || 'all';
+
+  useSEO({ 
+    title: 'Vault Directory', 
+    description: 'Explore our comprehensive directory of vetted marketing automation and AI tools.' 
+  });
 
   const categories = [
     'all',
@@ -37,7 +44,7 @@ const ResourceList: React.FC = () => {
           <input 
             type="text" 
             placeholder="Search the vault for expert marketing tools..."
-            className="w-full bg-surface border border-slate-800 rounded-xl pl-12 pr-4 py-4 focus:ring-1 focus:ring-accent focus:border-accent outline-none transition-all"
+            className="w-full bg-surface border border-slate-800 rounded-xl pl-12 pr-4 py-4 focus:ring-1 focus:ring-accent focus:border-accent outline-none transition-all text-white"
           />
         </div>
         <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2">
@@ -63,45 +70,16 @@ const ResourceList: React.FC = () => {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
       >
         {filteredResources.map((res) => (
-          <motion.div 
-            layout
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            key={res.id}
-            className="group bg-surface border border-accent/5 p-6 rounded-2xl hover:border-accent/40 transition-all flex flex-col h-full"
-          >
-            <div className="flex justify-between items-start mb-6">
-              <div className="size-12 bg-background border border-slate-800 rounded-lg flex items-center justify-center p-2.5">
-                {res.icon === 'search' && <ShieldCheck className="text-accent" />}
-                {res.icon === 'zap' && <Zap className="text-accent" />}
-                {res.icon === 'brain' && <Brain className="text-accent" />}
-                {res.icon === 'users' && <Users className="text-accent" />}
-                {res.icon === 'bar-chart' && <BarChart3 className="text-accent" />}
-                {res.icon === 'eye' && <Eye className="text-accent" />}
-              </div>
-              {res.certified && (
-                <div className="bg-accent/10 text-accent text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest border border-accent/20">
-                  Certified
-                </div>
-              )}
-            </div>
-            <h3 className="text-lg font-extrabold mb-2 group-hover:text-accent transition-colors">{res.name}</h3>
-            <p className="text-slate-400 text-xs leading-relaxed mb-6 flex-grow">
-              {res.description}
-            </p>
-            <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-800/50">
-              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{res.category}</span>
-              <Link to={`/resources/${res.slug}`} className="text-slate-600 group-hover:text-accent transition-all group-hover:translate-x-1">
-                <ArrowRight size={18} />
-              </Link>
-            </div>
-          </motion.div>
+          <ToolCard key={res.id} resource={res} compact={true} />
         ))}
       </motion.div>
 
       {filteredResources.length === 0 && (
-        <div className="text-center py-20">
-          <p className="text-slate-500">No resources found matching this category.</p>
+        <div className="text-center py-20 border border-dashed border-slate-800 rounded-3xl">
+          <p className="text-slate-500 font-medium">No resources found matching this category.</p>
+          <Link to="/resources" className="text-accent text-sm font-bold mt-4 inline-block hover:underline">
+            Clear all filters
+          </Link>
         </div>
       )}
     </div>
