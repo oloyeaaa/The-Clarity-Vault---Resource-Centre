@@ -4,6 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, Calendar, Clock, Share2, Bookmark } from 'lucide-react';
 import { BLOG_POSTS } from '../lib/data';
+import { SEO } from '../components/SEO';
 
 const BlogPostDetail: React.FC = () => {
   const { slug } = useParams();
@@ -12,19 +13,22 @@ const BlogPostDetail: React.FC = () => {
   if (!post) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-24 text-center">
+        <SEO title="Post Not Found" />
         <h1 className="text-2xl font-bold mb-4">Post not found</h1>
         <Link to="/blog" className="text-accent">Back to Blog</Link>
       </div>
     );
   }
 
-  // Set document title for "SEO"
-  React.useEffect(() => {
-    document.title = `${post.title} | The Clarity Vault`;
-  }, [post]);
-
   return (
     <div className="max-w-4xl mx-auto px-6 py-12">
+      {/* Dynamic SEO Integration */}
+      <SEO 
+        title={post.title} 
+        description={post.excerpt} 
+        type="article"
+      />
+
       <Link to="/blog" className="inline-flex items-center gap-2 text-slate-500 hover:text-white transition-colors mb-12 font-bold text-sm">
         <ChevronLeft size={16} />
         Back to Blog

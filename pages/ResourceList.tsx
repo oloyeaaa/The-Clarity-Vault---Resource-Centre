@@ -5,16 +5,11 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { RESOURCES } from '../lib/data';
 import { ToolCard } from '../components/ToolCard';
-import { useSEO } from '../lib/seo';
+import { SEO } from '../components/SEO';
 
 const ResourceList: React.FC = () => {
   const [searchParams] = useSearchParams();
   const filter = searchParams.get('filter') || 'all';
-
-  useSEO({ 
-    title: 'Vault Directory', 
-    description: 'Explore our comprehensive directory of vetted marketing automation and AI tools.' 
-  });
 
   const categories = [
     'all',
@@ -32,6 +27,11 @@ const ResourceList: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
+      <SEO 
+        title="Vault Directory" 
+        description="Explore our comprehensive directory of vetted marketing automation, AI tools, and technical performance resources." 
+      />
+      
       <header className="mb-16">
         <h1 className="text-4xl font-extrabold mb-4">Vault Directory</h1>
         <p className="text-slate-400 max-w-2xl">The most comprehensive, expert-vetted directory of technical marketing solutions on the web.</p>

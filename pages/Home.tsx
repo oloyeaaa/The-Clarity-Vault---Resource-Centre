@@ -5,14 +5,9 @@ import { ShieldCheck, ArrowRight, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { RESOURCES } from '../lib/data';
 import { ToolCard } from '../components/ToolCard';
-import { useSEO } from '../lib/seo';
+import { SEO } from '../components/SEO';
 
 const Home: React.FC = () => {
-  useSEO({ 
-    title: 'Precision Automation Hub', 
-    description: 'Vetted resources for marketing automation and AI strategy.' 
-  });
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
@@ -20,6 +15,11 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col overflow-hidden">
+      <SEO 
+        title="Precision Automation Hub" 
+        description="Vetted resources for marketing automation, AI strategy, and precision growth performance." 
+      />
+      
       {/* Hero Section */}
       <section className="relative py-24 px-6 overflow-hidden">
         <div className="absolute top-0 right-0 w-2/3 h-full bg-[radial-gradient(circle_at_center_right,rgba(219,127,32,0.1),transparent_70%)] -z-10" />

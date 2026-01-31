@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
 import ResourceList from './pages/ResourceList';
@@ -22,19 +23,21 @@ const Router = isDevelopment ? HashRouter : BrowserRouter;
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <MainLayout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/resources" element={<ResourceList />} />
-          <Route path="/resources/:slug" element={<ResourceDetail />} />
-          <Route path="/blog" element={<BlogList />} />
-          <Route path="/blog/:slug" element={<BlogPostDetail />} />
-          {/* Fallback for invalid routes */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </MainLayout>
-    </Router>
+    <HelmetProvider>
+      <Router>
+        <MainLayout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/resources" element={<ResourceList />} />
+            <Route path="/resources/:slug" element={<ResourceDetail />} />
+            <Route path="/blog" element={<BlogList />} />
+            <Route path="/blog/:slug" element={<BlogPostDetail />} />
+            {/* Fallback for invalid routes */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </MainLayout>
+      </Router>
+    </HelmetProvider>
   );
 };
 

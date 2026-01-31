@@ -3,20 +3,16 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, ExternalLink, ShieldCheck, Zap, Brain, Users, BarChart3, Eye, Check } from 'lucide-react';
 import { RESOURCES } from '../lib/data';
-import { useSEO } from '../lib/seo';
+import { SEO } from '../components/SEO';
 
 const ResourceDetail: React.FC = () => {
   const { slug } = useParams();
   const resource = RESOURCES.find(r => r.slug === slug);
 
-  useSEO({ 
-    title: resource ? resource.name : 'Resource Not Found',
-    description: resource ? resource.description : undefined
-  });
-
   if (!resource) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-24 text-center">
+        <SEO title="Resource Not Found" />
         <h1 className="text-2xl font-bold mb-4">Resource not found</h1>
         <Link to="/resources" className="text-accent font-bold hover:underline">Back to Directory</Link>
       </div>
@@ -25,6 +21,11 @@ const ResourceDetail: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
+      <SEO 
+        title={resource.name} 
+        description={resource.description} 
+      />
+
       <Link to="/resources" className="inline-flex items-center gap-2 text-slate-500 hover:text-white transition-colors mb-12 font-bold text-sm group">
         <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
         Back to Directory
