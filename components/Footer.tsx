@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Twitter, Linkedin, Github } from 'lucide-react';
+import { Twitter, Linkedin, Github, Lock } from 'lucide-react';
 
 export const Footer: React.FC = () => (
   <footer className="bg-background py-20 px-6 border-t border-slate-900">
@@ -42,7 +42,12 @@ export const Footer: React.FC = () => (
       </div>
     </div>
     <div className="max-w-7xl mx-auto pt-16 mt-16 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-      <p>© 2024 The Clarity Vault. Precision in every resource.</p>
+      <div className="flex items-center gap-4">
+        <p>© 2024 The Clarity Vault. Precision in every resource.</p>
+        <Link to="/admin" className="text-slate-800 hover:text-accent flex items-center gap-1 transition-colors">
+          <Lock size={10} /> Admin
+        </Link>
+      </div>
       <div className="flex gap-8">
         <a href="#" className="hover:text-white transition-colors">Privacy</a>
         <a href="#" className="hover:text-white transition-colors">Terms</a>

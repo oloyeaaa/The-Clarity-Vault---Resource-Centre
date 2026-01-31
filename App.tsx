@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
@@ -10,20 +10,12 @@ import BlogList from './pages/BlogList';
 import BlogPostDetail from './pages/BlogPostDetail';
 import Admin from './pages/Admin';
 
-const isDevelopment = 
-  window.location.hostname.includes('google.com') || 
-  window.location.hostname === 'localhost' ||
-  window.location.hostname.includes('googleusercontent.com');
-
-const Router = isDevelopment ? HashRouter : BrowserRouter;
-
 const App: React.FC = () => {
   return (
     <HelmetProvider>
-      <Router>
+      <HashRouter>
         <Routes>
-          {/* Admin area is handled separately to avoid MainLayout wrap if desired, 
-              or kept simple for consistent branding */}
+          {/* Admin area is handled separately to avoid MainLayout wrap */}
           <Route path="/admin" element={<Admin />} />
           
           <Route path="/" element={<MainLayout><Home /></MainLayout>} />
@@ -34,7 +26,7 @@ const App: React.FC = () => {
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Router>
+      </HashRouter>
     </HelmetProvider>
   );
 };
